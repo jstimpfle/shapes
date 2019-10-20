@@ -31,6 +31,7 @@ AttributeLocation get_attribute_location(GfxProgram gfxProgram, const char *attr
 void set_program_uniform_1f(GfxProgram gfxProgram, UniformLocation uniformLocation, float x);
 void set_program_uniform_2f(GfxProgram gfxProgram, UniformLocation uniformLocation, float x, float y);
 void set_program_uniform_3f(GfxProgram gfxProgram, UniformLocation uniformLocation, float x, float y, float z);
+void set_program_uniform_mat2f(GfxProgram gfxProgram, UniformLocation uniformLocation, float *fourFloats);
 void set_attribute_pointer(GfxVAO gfxVaoOfProgram, AttributeLocation attribLocation, GfxVBO gfxVBO, int numFloats, int stride, int offset);
 void set_GfxShader_source(GfxShader gfxShader, const char *source);
 void compile_GfxShader(GfxShader gfxShader);

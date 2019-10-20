@@ -61,12 +61,6 @@ enum KeyKind {
         KEY_X,
         KEY_Y,
         KEY_Z,
-
-        // we will treat mouse scrolls as "keyboard input"
-        KEY_SCROLLLEFT,
-        KEY_SCROLLRIGHT,
-        KEY_SCROLLUP,
-        KEY_SCROLLDOWN,
 };
 
 enum MousebuttonKind {
@@ -81,13 +75,21 @@ enum MousebuttonKind {
         NUM_MOUSEBUTTON_KINDS,
 };
 
+enum ScrollKind {
+        SCROLL_LEFT,
+        SCROLL_RIGHT,
+        SCROLL_DOWN,
+        SCROLL_UP,
+        NUM_SCROLL_KINDS,
+};
+
 enum InputKind {
         // currently INPUT_KEY and INPUT_MOUSEBUTTON are separate things,
         // even though we could make them one. But I think processing is
         // usually done separately anyway.
         INPUT_KEY,
         INPUT_MOUSEBUTTON,
-
+        INPUT_SCROLL,
         INPUT_CURSORMOVE,
 
         // virtual tick input from time to time for now,
@@ -140,6 +142,11 @@ struct MousebuttonInput {
         int modifiers;  // OR'ed MODIFIER_??'s
 };
 
+struct ScrollInput {
+        enum ScrollKind scrollKind;
+        int modifiers;
+};
+
 struct CursormoveInput {
         int pixelX;
         int pixelY;
@@ -155,6 +162,7 @@ struct Input {
         union {
                 struct KeyInput tKey;
                 struct MousebuttonInput tMousebutton;
+                struct ScrollInput tScroll;
                 struct CursormoveInput tCursormove;
                 struct WindowresizeInput tWindowresize;
         } data;

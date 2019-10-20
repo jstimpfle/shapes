@@ -169,6 +169,15 @@ void set_program_uniform_3f(GfxProgram gfxProgram, UniformLocation uniformLocati
         CHECK_GL_ERRORS();
 }
 
+void set_program_uniform_mat2f(GfxProgram gfxProgram, UniformLocation uniformLocation, float *fourFloats)
+{
+        GLuint programId = gfxProgramInfo[gfxProgram].programId;
+        glUseProgram(programId);
+        glUniformMatrix2fv(uniformLocation, 1, GL_FALSE, fourFloats);
+        glUseProgram(0);
+        CHECK_GL_ERRORS();
+}
+
 void set_attribute_pointer(GfxVAO gfxVAO, AttributeLocation attribLocation, GfxVBO gfxVBO, int numFloats, int stride, int offset)
 {
         GLuint vaoId = gfxVAOInfo[gfxVAO].vaoId;

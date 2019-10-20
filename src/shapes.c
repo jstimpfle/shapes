@@ -22,10 +22,12 @@ enum {
 };
 
 enum {
+        UNIFORM_ELLIPSE_transMat,
         UNIFORM_ELLIPSE_p0,
         UNIFORM_ELLIPSE_p1,
         UNIFORM_ELLIPSE_radius,
         UNIFORM_ELLIPSE_color,
+        UNIFORM_CIRCLE_transMat,
         UNIFORM_CIRCLE_centerPoint,
         UNIFORM_CIRCLE_radius,
         UNIFORM_CIRCLE_color,
@@ -63,12 +65,13 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 #define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
         MAKE(SHADER_ELLIPSE_VERT, SHADER_VERTEX,
                 "#version 130\n"
+                "uniform mat2 transMat;\n"
                 "in vec2 position;\n"
                 "out vec2 fragPosF;\n"
                 "void main()\n"
                 "{\n"
                 "       fragPosF = position;\n"
-                "       gl_Position = vec4(position, 0.0, 1.0);\n"
+                "       gl_Position = vec4(transMat * position, 0.0, 1.0);\n"
                 "}\n"),
         MAKE(SHADER_ELLIPSE_FRAG, SHADER_FRAGMENT,
                 "#version 130\n"
@@ -82,22 +85,26 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    float d0 = distance(p0.xy, fragPosF);\n"
                 "    float d1 = distance(p1.xy, fragPosF);\n"
                 "    float d = d0 + d1;\n"
-                "    if (d > radius)\n"
+                "    float fragDist = fwidth(d);\n"
+                "    float rdx = fragDist * 5.0f; /* about 5 pixels */\n"
+                "    if (d > radius + rdx)\n"
                 "        discard;\n"
-                "    float val = smoothstep(radius-0.1, radius, d);\n"
+                "    float val = smoothstep(radius - rdx, radius + rdx, d);\n"
                 "    gl_FragColor = vec4(color, 1.0 - val);\n"
                 "}\n"),
         MAKE(SHADER_CIRCLE_VERT, SHADER_VERTEX,
                 "#version 130\n"
+                "uniform mat2 transMat;\n"
                 "in vec2 position;\n"
                 "out vec2 positionF;\n"
                 "void main()\n"
                 "{\n"
                 "    positionF = position;\n"
-                "    gl_Position = vec4(position, 0.0, 1.0);\n"
+                "    gl_Position = vec4(transMat * position, 0.0, 1.0);\n"
                 "}\n"),
         MAKE(SHADER_CIRCLE_FRAG, SHADER_FRAGMENT,
                 "#version 130\n"
+                "uniform mat2 transMat;\n"
                 "uniform vec2 centerPoint;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
@@ -105,9 +112,11 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
+                "    float fragDist = fwidth(d);\n"
+                "    float rdx = fragDist / 2.0;\n"
                 "    if (d > radius)\n"
                 "        discard;\n"
-                "    gl_FragColor = vec4(color, 1.0 - smoothstep(radius-0.02, radius, d));\n"
+                "    gl_FragColor = vec4(color, 1.0 - smoothstep(radius - rdx, radius + rdx, d));\n"
                 "}\n"),
 #undef MAKE
 };
@@ -121,10 +130,12 @@ static struct LinkInfo linkInfo[] = {
 
 static const struct UniformInfo uniformInfo[NUM_UNIFORM_KINDS] = {
 #define MAKE(x, y, z) [y] = { x, z }
+        MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_transMat, "transMat" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_p0, "p0" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_p1, "p1" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_radius, "radius" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_color, "color" ),
+        MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_transMat, "transMat" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_centerPoint, "centerPoint" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_radius, "radius" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_color, "color" ),
@@ -157,6 +168,8 @@ static GfxVBO gfxVBO;
 
 static float mousePosX;
 static float mousePosY;
+static float zoomFactor = 1.0f;
+static float transMat[2][2];
 static int isHoveringEllipse;
 static int isDraggingEllipse;
 static int activeEllipse;
@@ -172,9 +185,13 @@ float distance2d(float x0, float y0, float x1, float y1)
 
 int test_ellipse_hit(const struct Ellipse *ellipse, float x, float y)
 {
-        float d0 = distance2d(ellipse->centerX0, ellipse->centerY0, x, y);
-        float d1 = distance2d(ellipse->centerX1, ellipse->centerY1, x, y);
-        return d0 + d1 <= ellipse->radius;
+        float x0 = zoomFactor * ellipse->centerX0;
+        float y0 = zoomFactor * ellipse->centerY0;
+        float x1 = zoomFactor * ellipse->centerX1;
+        float y1 = zoomFactor * ellipse->centerY1;
+        float d0 = distance2d(x0, y0, x, y);
+        float d1 = distance2d(x1, y1, x, y);
+        return d0 + d1 <= zoomFactor * ellipse->radius;
 }
 
 void add_ellipse(const struct Ellipse *ellipse)
@@ -195,27 +212,23 @@ void setup_shapesrender(void)
 {        
         for (int i = 0; i < NUM_SHADER_KINDS; i++)
                 gfxShader[i] = create_GfxShader(shaderInfo[i].shaderType, shaderInfo[i].shaderName);
-        for (int i = 0; i < NUM_SHADER_KINDS; i++)
-                set_GfxShader_source(gfxShader[i], shaderInfo[i].shaderSource);
-        for (int i = 0; i < NUM_SHADER_KINDS; i++)
-                compile_GfxShader(gfxShader[i]);
-        
         for (int i = 0; i < NUM_PROGRAM_KINDS; i++)
                 gfxProgram[i] = create_GfxProgram("test-program");
         for (int i = 0; i < LENGTH(linkInfo); i++)
                 add_GfxShader_to_GfxProgram(gfxShader[linkInfo[i].shaderKind], gfxProgram[linkInfo[i].programKind]);
+        for (int i = 0; i < NUM_SHADER_KINDS; i++)
+                set_GfxShader_source(gfxShader[i], shaderInfo[i].shaderSource);
+        for (int i = 0; i < NUM_SHADER_KINDS; i++)
+                compile_GfxShader(gfxShader[i]);
         for (int i = 0; i < NUM_PROGRAM_KINDS; i++)
                 link_GfxProgram(gfxProgram[i]);
-
-        gfxVBO = create_GfxVBO();
-
-        for (int i = 0; i < NUM_PROGRAM_KINDS; i++)
-                gfxVaoOfProgram[i] = create_GfxVAO();
         for (int i = 0; i < NUM_UNIFORM_KINDS; i++)
                 uniformLocation[i] = get_uniform_location(gfxProgram[uniformInfo[i].programKind], uniformInfo[i].uniformName);
         for (int i = 0; i < NUM_ATTRIBUTE_KINDS; i++)
                 attributeLocation[i] = get_attribute_location(gfxProgram[attributeInfo[i].programKind], attributeInfo[i].attributeName);
-
+        for (int i = 0; i < NUM_PROGRAM_KINDS; i++)
+                gfxVaoOfProgram[i] = create_GfxVAO();
+        gfxVBO = create_GfxVBO();
         set_attribute_pointer(gfxVaoOfProgram[PROGRAM_ELLIPSE], attributeLocation[ATTRIBUTE_ELLIPSE_position], gfxVBO, 2, sizeof(struct Vec2), 0);
         set_attribute_pointer(gfxVaoOfProgram[PROGRAM_CIRCLE], attributeLocation[ATTRIBUTE_CIRCLE_position], gfxVBO, 2, sizeof(struct Vec2), 0);
 }
@@ -257,18 +270,31 @@ void update_shapes(struct Input input)
                         }
                 }
         }
+        else if (input.inputKind == INPUT_SCROLL) {
+                if (input.data.tScroll.scrollKind == SCROLL_UP) {
+                        zoomFactor += 0.5f;
+                        if (zoomFactor > 5.0f)
+                                zoomFactor = 5.0f;
+                }
+                else if (input.data.tScroll.scrollKind == SCROLL_DOWN) {
+                        zoomFactor -= 0.5f;
+                        if (zoomFactor < 1.0f)
+                                zoomFactor = 1.0f;
+                }
+        }
 }
 
 static void draw_ellipse_control_point(struct Vec2 point)
 {
         float radius = 0.05f;
         struct Vec3 whiteColor = { 1.0f, 1.0f, 1.0f };
-        float xa = point.x - 1.5 * radius;
-        float xb = point.x + 1.5 * radius;
-        float ya = point.y - 1.5 * radius;
-        float yb = point.y + 1.5 * radius;
+        float xa = point.x - 1.5f * radius;
+        float xb = point.x + 1.5f * radius;
+        float ya = point.y - 1.5f * radius;
+        float yb = point.y + 1.5f * radius;
         const struct Vec2 smallVerts[] = {{ xa, ya }, { xa, yb }, { xb, yb }, { xa, ya }, { xb, yb }, { xb, ya }};
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
+        set_program_uniform_mat2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], point.x, point.y);
         set_program_uniform_1f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_radius], radius);
         set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], whiteColor.x, whiteColor.y, whiteColor.z);
@@ -278,13 +304,15 @@ static void draw_ellipse_control_point(struct Vec2 point)
 void draw_shapes(void)
 {
         clear_current_buffer();
+        transMat[0][0] = zoomFactor * 1.0f;
+        transMat[0][1] = 0.0f;
+        transMat[1][0] = 0.0f;
+        transMat[1][1] = zoomFactor * -1.0f;
         for (int i = 0; i < numEllipses; i++) {
                 struct Ellipse *e = &ellipseShapes[i];
                 const struct Vec2 ellipseControlPoints[2] = {
-                        { e->centerX0, -e->centerY0 },
-                        { e->centerX1, -e->centerY1 },
-                        //{ -0.5, 0.0f, 0.0f },
-                        //{ 0.5, 0.0f, 0.0f },
+                        { e->centerX0, e->centerY0 },
+                        { e->centerX1, e->centerY1 },
                 };
 
                 struct Vec3 color;
@@ -296,6 +324,7 @@ void draw_shapes(void)
                         color = (struct Vec3) { 0.1f, 0.1f, 0.1f };
                 
                 set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
+                set_program_uniform_mat2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
                 set_program_uniform_3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_color], color.x, color.y, color.z);
                 set_program_uniform_1f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_radius], e->radius);
                 set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p0], ellipseControlPoints[0].x, ellipseControlPoints[0].y);

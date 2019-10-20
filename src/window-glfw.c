@@ -160,22 +160,24 @@ static void scroll_cb_glfw(GLFWwindow *win, double xoff, double yoff)
 {
         UNUSED(win);
 
-        enum KeyKind keyKind;
+        enum ScrollKind scrollKind;
         if (xoff < 0.0)
-                keyKind = KEY_SCROLLLEFT;
+                scrollKind = SCROLL_LEFT;
         else if (xoff > 0.0)
-                keyKind = KEY_SCROLLRIGHT;
+                scrollKind = SCROLL_RIGHT;
         else if (yoff < 0.0)
-                keyKind = KEY_SCROLLDOWN;
+                scrollKind = SCROLL_DOWN;
         else if (yoff > 0.0)
-                keyKind = KEY_SCROLLUP;
+                scrollKind = SCROLL_UP;
         else
                 return;
 
         int modifiers = 0;
-        int hasCodepoint = 0;
-        unsigned codepoint = 0;
-        enqueue_key_input(keyKind, KEYEVENT_PRESS, modifiers, hasCodepoint, codepoint);
+        struct Input input;
+        input.inputKind = INPUT_SCROLL;
+        input.data.tScroll.scrollKind = scrollKind;
+        input.data.tScroll.modifiers = 0;
+        enqueue_input(&input);
 }
 
 static void key_cb_glfw(GLFWwindow *win, int key, int scancode, int action, int mods)
