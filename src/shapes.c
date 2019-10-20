@@ -104,9 +104,10 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "in vec2 positionF;\n"
                 "void main()\n"
                 "{\n"
-                "    if (distance(positionF, centerPoint) > radius)\n"
+                "    float d = distance(positionF, centerPoint);\n"
+                "    if (d > radius)\n"
                 "        discard;\n"
-                "    gl_FragColor = vec4(color, 1.0);\n"
+                "    gl_FragColor = vec4(color, 1.0 - smoothstep(radius-0.02, radius, d));\n"
                 "}\n"),
 #undef MAKE
 };
