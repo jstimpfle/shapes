@@ -176,7 +176,7 @@ static void scroll_cb_glfw(GLFWwindow *win, double xoff, double yoff)
         struct Input input;
         input.inputKind = INPUT_SCROLL;
         input.data.tScroll.scrollKind = scrollKind;
-        input.data.tScroll.modifiers = 0;
+        input.data.tScroll.modifiers = modifiers;
         enqueue_input(&input);
 }
 
