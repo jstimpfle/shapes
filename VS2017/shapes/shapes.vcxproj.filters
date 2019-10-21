@@ -39,6 +39,9 @@
     <ClCompile Include="..\..\src\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\shapesrender.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\shapes\window.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\shapes\shapes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\shapes\geometry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

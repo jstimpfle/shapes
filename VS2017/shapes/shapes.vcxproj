@@ -133,10 +133,12 @@
     <ClCompile Include="..\..\src\main.c" />
     <ClCompile Include="..\..\src\memoryalloc.c" />
     <ClCompile Include="..\..\src\shapes.c" />
+    <ClCompile Include="..\..\src\shapesrender.c" />
     <ClCompile Include="..\..\src\window-glfw.c" />
     <ClCompile Include="..\..\src\window.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\shapes\geometry.h" />
     <ClInclude Include="..\..\include\shapes\gfxrender.h" />
     <ClInclude Include="..\..\include\shapes\logging.h" />
     <ClInclude Include="..\..\include\shapes\memoryalloc.h" />
