@@ -242,10 +242,11 @@ void clear_current_buffer(void)
         CHECK_GL_ERRORS();
         //XXX
         //glDisable(GL_DEPTH_TEST);
+        glEnable(GL_FRAMEBUFFER_SRGB);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, windowWidthInPixels, windowHeightInPixels);
-        glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

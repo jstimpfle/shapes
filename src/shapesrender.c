@@ -82,10 +82,10 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    float d1 = distance(p1.xy, fragPosF);\n"
                 "    float d = d0 + d1;\n"
                 "    float fragDist = fwidth(d);\n"
-                "    float rdx = fragDist * 5.0f; /* about 5 pixels */\n"
+                "    float rdx = fragDist;\n"
                 "    if (d > radius + rdx)\n"
                 "        discard;\n"
-                "    float val = smoothstep(radius - rdx, radius + rdx, d);\n"
+                "    float val = (d - (radius - rdx)) / rdx;\n"
                 "    gl_FragColor = vec4(color, 1.0 - val);\n"
                 "}\n"),
         MAKE(SHADER_CIRCLE_VERT, SHADER_VERTEX,
@@ -108,11 +108,12 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
-                "    float fragDist = fwidth(d);\n"
-                "    float rdx = fragDist / 2.0;\n"
-                "    if (d > radius)\n"
+                "    float fragDist = fwidth(positionF.x - centerPoint.x);\n"
+                "    float rdx = fragDist;\n"
+                "    if (d > radius + rdx)\n"
                 "        discard;\n"
-                "    gl_FragColor = vec4(color, 1.0 - smoothstep(radius - rdx, radius + rdx, d));\n"
+                "    float val = (d - (radius - rdx)) / rdx;\n"
+                "    gl_FragColor = vec4(color, 1.0 - val);\n"
                 "}\n"),
 #undef MAKE
 };
@@ -199,11 +200,11 @@ static void draw_ellipse(Object ellipse)
 
         struct Vec3 color;
         if (isDraggingObject && activeObject == ellipse)
-                color = (struct Vec3) {0.5f, 1.0f, 1.0f};
+                color = (struct Vec3) {0.4f, 0.4f, 0.5f};
         else if (isHoveringObject && activeObject == ellipse)
                 color = (struct Vec3) { 0.5, 0.0f, 0.0f };
         else
-                color = (struct Vec3) { 0.1f, 0.1f, 0.1f };
+                color = (struct Vec3) { 0.0f, 0.0f, 1.0f };
 
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
         set_program_uniform_mat2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
@@ -220,17 +221,26 @@ static void draw_point(Object obj)
         float x = circle->centerX;
         float y = circle->centerY;
         float radius = circle->radius;
-        struct Vec3 whiteColor = { 1.0f, 1.0f, 1.0f };
-        float xa = x - 1.5f * radius;
-        float xb = x + 1.5f * radius;
-        float ya = y - 1.5f * radius;
-        float yb = y + 1.5f * radius;
-        const struct Vec2 smallVerts[] = {{ xa, ya }, { xa, yb }, { xb, yb }, { xa, ya }, { xb, yb }, { xb, ya }};
+        struct Vec3 color;
+        float xa = x - 2.f * radius;
+        float xb = x + 2.f * radius;
+        float ya = y - 2.f * radius;
+        float yb = y + 2.f * radius;
+        const struct Vec2 smallVerts[] = {
+                { xa, ya }, { xa, yb }, { xb, yb },
+                { xa, ya }, { xb, yb }, { xb, ya }
+        };
+        if (isDraggingObject && activeObject == obj)
+                color = (struct Vec3) { 0.4f, 0.2f, 0.8f };
+        else if (isHoveringObject && activeObject == obj)
+                color = (struct Vec3) { 0.1f, 0.1f, 0.4f };
+        else
+                color = (struct Vec3) { 0.8f, 0.8f, 0.8f };
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
         set_program_uniform_mat2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
         set_program_uniform_1f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_radius], radius);
-        set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], whiteColor.x, whiteColor.y, whiteColor.z);
+        set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], color.x, color.y, color.z);
         render_with_GfxProgram(gfxProgram[PROGRAM_CIRCLE], gfxVaoOfProgram[PROGRAM_CIRCLE], 0, LENGTH(screenVerts));
 }
 

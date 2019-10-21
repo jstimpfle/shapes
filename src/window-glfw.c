@@ -265,7 +265,7 @@ void enter_windowing_mode(void)
         GLFWmonitor *monitor = NULL;
         int pixelsW = 800;
         int pixelsH = 600;
-        glfwSetWindowMonitor(windowGlfw, monitor, 300, 300, pixelsW, pixelsH, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(windowGlfw, monitor, 100, 100, pixelsW, pixelsH, GLFW_DONT_CARE);
         isFullscreenMode = 0;
 }
 
