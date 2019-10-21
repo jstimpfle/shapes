@@ -1,12 +1,13 @@
 #include <shapes/defs.h>
+#include <shapes/geometry.h>
+#include <shapes/window.h> // struct Input
 
-struct Ellipse {
-        float centerX0;
-        float centerX1;
-        float centerY0;
-        float centerY1;
-        float radius;
+enum {
+        OBJECT_CIRCLE,
+        OBJECT_ELLIPSE,
 };
+
+typedef int Object;
 
 struct Circle {
         float centerX;
@@ -14,17 +15,40 @@ struct Circle {
         float radius;
 };
 
-DATA struct Ellipse *ellipseShapes;
-DATA struct Circle *circleShapes;
+struct Ellipse {
+        Object centerCircle0;
+        Object centerCircle1;
+        float radius;
+};
 
-DATA int numEllipses;
-DATA int numCircles;
+struct Object {
+        int objectKind;
+        union {
+                struct Circle tCircle;
+                struct Ellipse tEllipse;
+        } data;
+};
 
+DATA struct Object *objects;
+DATA int numObjects;
+
+DATA float mousePosX;
+DATA float mousePosY;
+DATA float mouseStartX;
+DATA float mouseStartY;
+DATA float objectStartX;
+DATA float objectStartY;
+DATA float objectStartRadius;
+DATA float zoomFactor;
+DATA float transMat[2][2];
+DATA int isHoveringObject;
+DATA int isDraggingObject;
+DATA int activeObject;
 
 void setup_shapesrender(void);
 void draw_shapes(void);
 
-void add_ellipse(const struct Ellipse *ellipse);
-void add_circle(const struct Circle *circle);
-#include <shapes/window.h>
+void setup_shapes(void);
+Object add_circle(float x, float y, float radius);
+Object add_ellipse(Object centerCircle0, Object centerCircle1, float radius);
 void update_shapes(struct Input input);

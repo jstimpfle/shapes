@@ -16,6 +16,7 @@ src/logging.c \
 src/main.c \
 src/memoryalloc.c \
 src/shapes.c \
+src/shapesrender.c \
 src/window-glfw.c \
 src/window.c
 

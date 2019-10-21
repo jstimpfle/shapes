@@ -21,17 +21,19 @@ int main(void)
 {
         setup_window();
         setup_gfx();
-
+        setup_shapes();
         setup_shapesrender();
 
-        add_ellipse(&(struct Ellipse){ -0.2f, 0.3f, 0.2f, -0.3f, 1.0f});
+        Object c0 = add_circle(-0.2f, 0.1f, 0.05f);
+        Object c1 = add_circle(0.2f, 0.1f, 0.05f);
+        add_ellipse(c0, c1, 1.0f);
 
         while (!shouldWindowClose) {
                 wait_for_events();
                 process_events();
                 draw_shapes();
                 swap_buffers();
-        };        
+        };
 
         return 0;
 }

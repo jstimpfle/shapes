@@ -10,17 +10,6 @@ typedef int GfxProgram;
 typedef int UniformLocation;
 typedef int AttributeLocation;
 
-struct Vec2 {
-        float x;
-        float y;
-};
-
-struct Vec3 {
-        float x;
-        float y;
-        float z;
-};
-
 GfxVBO create_GfxVBO(void);
 GfxVAO create_GfxVAO(void);
 GfxShader create_GfxShader(int shaderKind, const char *shaderName);
