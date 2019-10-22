@@ -1,6 +1,7 @@
 #include <shapes/defs.h>
 #include <shapes/gfxrender.h>
 #include <shapes/logging.h>
+#include <shapes/window.h>
 #include <shapes/shapes.h>
 
 enum {
@@ -239,11 +240,12 @@ static void draw_point(Object obj)
 void draw_shapes(void)
 {
         clear_current_buffer();
+        float ratio = (float) windowWidthInPixels / windowHeightInPixels;
         transMat[0][0] = zoomFactor * 2.0f;
         transMat[0][1] = 0.0f;
         transMat[0][2] = -zoomFactor;
         transMat[1][0] = 0.0f;
-        transMat[1][1] = zoomFactor * 2.0f;
+        transMat[1][1] = zoomFactor * ratio * 2.0f;
         transMat[1][2] = -zoomFactor;
         transMat[2][0] = 0.0f;
         transMat[2][1] = 0.0f;

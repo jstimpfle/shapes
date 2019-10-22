@@ -74,7 +74,7 @@ void update_shapes(struct Input input)
                 int y = input.data.tCursormove.pixelY;
                 // unproject mouse position. XXX do it based on transMat
                 mousePosX = (float) x / windowWidthInPixels;
-                mousePosY = 1.0f - (float) y / windowHeightInPixels;
+                mousePosY = (float) (windowHeightInPixels - y) / windowWidthInPixels;
                 if (isDraggingObject) {
                         float mouseDiffX = (mousePosX - mouseStartX) / zoomFactor;
                         float mouseDiffY = (mousePosY - mouseStartY) / zoomFactor;
