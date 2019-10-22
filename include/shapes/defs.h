@@ -13,19 +13,16 @@
 #pragma warning( disable : 4204)  // nonstandard extension used: non-constant aggregate initializer
 #define NORETURN __declspec(noreturn)
 #define UNUSEDFUNC
+static __declspec(noreturn) void UNREACHABLE(void) {}
 #else  // assume gcc or clang
 #define NORETURN __attribute__((noreturn))
 #define UNUSEDFUNC __attribute__((unused))
+#define UNREACHABLE __builtin_unreachable()
 #endif
 
 #define LENGTH(a) (sizeof (a) / sizeof (a)[0])
 #define ENSURE(a) assert(a)
 #define UNUSED(arg) (void)(arg)
-
-static inline NORETURN void UNREACHABLE(void)
-{
-        ENSURE(0);
-}
 
 #define NOT_IMPLEMENTED() fatalf("In %s:%ld : Not implemented", __FILE__, (long) __LINE__);
 

@@ -76,7 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\J\Desktop\shapes\include;C:\Users\J\Desktop\shapes\libs\opengl\include;C:\Users\J\Desktop\shapes\libs\glfw-3.2.1\include;C:\Users\J\Desktop\shapes\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\libs\opengl\include;..\..\libs\glfw-3.2.1\include;..\..\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>..\..\libs\glfw-3.2.1\x86\glfw3.lib;glu32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -88,7 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\J\Desktop\shapes\include;C:\Users\J\Desktop\shapes\libs\opengl\include;C:\Users\J\Desktop\shapes\libs\glfw-3.2.1\include;C:\Users\J\Desktop\shapes\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\libs\opengl\include;..\..\libs\glfw-3.2.1\include;..\..\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>..\..\libs\glfw-3.2.1\x64\glfw3.lib;glu32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -102,7 +102,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\J\Desktop\shapes\include;C:\Users\J\Desktop\shapes\libs\opengl\include;C:\Users\J\Desktop\shapes\libs\glfw-3.2.1\include;C:\Users\J\Desktop\shapes\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\libs\opengl\include;..\..\libs\glfw-3.2.1\include;..\..\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -118,7 +118,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\J\Desktop\shapes\include;C:\Users\J\Desktop\shapes\libs\opengl\include;C:\Users\J\Desktop\shapes\libs\glfw-3.2.1\include;C:\Users\J\Desktop\shapes\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\libs\opengl\include;..\..\libs\glfw-3.2.1\include;..\..\libs\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

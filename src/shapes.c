@@ -42,7 +42,7 @@ int test_object_hit(Object obj, float x, float y)
         else if (objects[obj].objectKind == OBJECT_ELLIPSE)
                 return test_ellipse_hit(&objects[obj].data.tEllipse, x, y);
         else
-                assert(0);
+                UNREACHABLE();
 }
 
 Object add_circle(float x, float y, float radius)

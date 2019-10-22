@@ -195,7 +195,7 @@ static void draw_ellipse(Object ellipse)
         if (isDraggingObject && activeObject == ellipse)
                 color = (struct Vec3) {0.3f, 0.4f, 0.5f};
         else if (isHoveringObject && activeObject == ellipse)
-                color = (struct Vec3) { 0.2, 0.4f, 0.5f };
+                color = (struct Vec3) { 0.2f, 0.4f, 0.5f };
         else
                 color = (struct Vec3) { 0.15f, 0.3f, 0.4f };
 

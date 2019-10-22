@@ -24,7 +24,7 @@ int main(void)
         setup_shapes();
         setup_shapesrender();
 
-        Object c0 = add_circle(0.3, 0.2f, 0.05f);
+        Object c0 = add_circle(0.3f, 0.2f, 0.05f);
         Object c1 = add_circle(0.7f, 0.5f, 0.05f);
         add_ellipse(c0, c1, 1.0f);
 
