@@ -13,6 +13,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct OpenGLInitInfo {
+        void(**funcptr)(void);
+        const char *name;
+};
+
 struct GfxVBOInfo {
         GLuint vboId;
 };
@@ -29,12 +34,6 @@ struct GfxShaderInfo {
 struct GfxProgramInfo {
         GLuint programId;
         const char *programName;
-};
-
-
-struct OpenGLInitInfo {
-        void(**funcptr)(void);
-        const char *name;
 };
 
 /* Define function pointers for all OpenGL extensions that we want to load */
@@ -116,20 +115,12 @@ GfxProgram create_GfxProgram(const char *programName)
         return gfxProgram;
 }
 
-void set_GfxVBO_data(GfxVBO gfxVBO, const void *data, uint64_t size)
-{
-        GLuint vboId = gfxVBOInfo[gfxVBO].vboId;
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 UniformLocation get_uniform_location(GfxProgram gfxProgram, const char *uniformName)
 {
         GLuint programId = gfxProgramInfo[gfxProgram].programId;
         UniformLocation uniformLocation = glGetUniformLocation(programId, uniformName);
         if (uniformLocation < 0)
-                log_postf("Failed to query attribute location for %s", uniformName);
+                log_postf("Failed to query uniform location for %s", uniformName);
         return uniformLocation;
 }
 
@@ -140,6 +131,14 @@ AttributeLocation get_attribute_location(GfxProgram gfxProgram, const char *attr
         if (attribLocation < 0)
                 log_postf("Failed to query attribute location for %s", attribName);
         return attribLocation;
+}
+
+void set_GfxVBO_data(GfxVBO gfxVBO, const void *data, uint64_t size)
+{
+        GLuint vboId = gfxVBOInfo[gfxVBO].vboId;
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void set_program_uniform_1f(GfxProgram gfxProgram, UniformLocation uniformLocation, float x)
@@ -173,7 +172,25 @@ void set_program_uniform_mat2f(GfxProgram gfxProgram, UniformLocation uniformLoc
 {
         GLuint programId = gfxProgramInfo[gfxProgram].programId;
         glUseProgram(programId);
-        glUniformMatrix2fv(uniformLocation, 1, GL_FALSE, fourFloats);
+        glUniformMatrix2fv(uniformLocation, 1, GL_TRUE, fourFloats);
+        glUseProgram(0);
+        CHECK_GL_ERRORS();
+}
+
+void set_program_uniform_mat3f(GfxProgram gfxProgram, UniformLocation uniformLocation, float *nineFloats)
+{
+        GLuint programId = gfxProgramInfo[gfxProgram].programId;
+        glUseProgram(programId);
+        glUniformMatrix3fv(uniformLocation, 1, GL_TRUE, nineFloats);
+        glUseProgram(0);
+        CHECK_GL_ERRORS();
+}
+
+void set_program_uniform_mat4f(GfxProgram gfxProgram, UniformLocation uniformLocation, float *sixteenFloats)
+{
+        GLuint programId = gfxProgramInfo[gfxProgram].programId;
+        glUseProgram(programId);
+        glUniformMatrix4fv(uniformLocation, 1, GL_TRUE, sixteenFloats);
         glUseProgram(0);
         CHECK_GL_ERRORS();
 }
@@ -276,7 +293,7 @@ void setup_gfx(void)
         /* Load OpenGL function pointers */
         for (int i = 0; i < LENGTH(openGLInitInfo); i++) {
                 const char *name = openGLInitInfo[i].name;
-                ANY_FUNCTION *funcptr = window_get_OpenGL_function_pointer(name);
+                void (*funcptr)(void) = get_OpenGL_function_pointer(name);
                 if (funcptr == NULL)
                         fatalf("OpenGL extension %s not found\n", name);
                 *openGLInitInfo[i].funcptr = funcptr;

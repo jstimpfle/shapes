@@ -6,7 +6,6 @@ static struct Input inpbuf[128];
 static int inputFront;
 static int inputBack;
 
-
 void enqueue_input(const struct Input *inp)
 {
         if (numInputs == LENGTH(inpbuf))

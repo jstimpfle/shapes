@@ -25,7 +25,6 @@ void log_write_cstring(const char *text)
         fprintf(stderr, "%s", text);
 }
 
-
 void _log_begin(const char *filename, int line)
 {
         log_writef("In %s line %d: ", filename, line);
@@ -35,7 +34,6 @@ void log_end(void)
 {
         log_writef("\n");
 }
-
 
 void _log_postfv(const char *filename, int line, const char *fmt, va_list ap)
 {

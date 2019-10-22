@@ -72,15 +72,15 @@ void update_shapes(struct Input input)
         if (input.inputKind == INPUT_CURSORMOVE) {
                 int x = input.data.tCursormove.pixelX;
                 int y = input.data.tCursormove.pixelY;
-                mousePosX = (2.0f * x / windowWidthInPixels) - 1.0f;
-                mousePosY = (2.0f * y / windowHeightInPixels) - 1.0f;
-
+                // unproject mouse position. XXX do it based on transMat
+                mousePosX = (float) x / windowWidthInPixels;
+                mousePosY = 1.0f - (float) y / windowHeightInPixels;
                 if (isDraggingObject) {
                         float mouseDiffX = (mousePosX - mouseStartX) / zoomFactor;
                         float mouseDiffY = (mousePosY - mouseStartY) / zoomFactor;
                         struct Object *obj = &objects[activeObject];
                         if (obj->objectKind == OBJECT_ELLIPSE) {
-                                obj->data.tEllipse.radius = objectStartRadius + distance2d(mouseDiffX, mouseDiffY, 0.0f, 0.0f);
+                                obj->data.tEllipse.radius = objectStartRadius + mousePosX - mouseStartX;
                         }
                         else if (obj->objectKind == OBJECT_CIRCLE) {
                                 obj->data.tCircle.centerX = objectStartX + mouseDiffX;

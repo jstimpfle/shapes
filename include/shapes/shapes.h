@@ -40,7 +40,7 @@ DATA float objectStartX;
 DATA float objectStartY;
 DATA float objectStartRadius;
 DATA float zoomFactor;
-DATA float transMat[2][2];
+DATA float transMat[3][3];
 DATA int isHoveringObject;
 DATA int isDraggingObject;
 DATA int activeObject;

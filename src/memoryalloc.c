@@ -12,7 +12,6 @@ void alloc_memory(void **outPtr, int numElems, int elemSize)
         *outPtr = ptr;
 }
 
-
 void realloc_memory(void **inoutPtr, int numElems, int elemSize)
 {
         int numBytes = numElems * elemSize; /*XXX overflow*/

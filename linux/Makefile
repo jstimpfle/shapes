@@ -20,7 +20,7 @@ src/shapesrender.c \
 src/window-glfw.c \
 src/window.c
 
-OBJECTS = $(CFILES:.c=.o)
+OBJECTS = $(CFILES:%.c=BUILD/%.o)
 
 all: shapes
 
@@ -29,3 +29,9 @@ clean:
 
 shapes: $(OBJECTS)
 	$(CC) $(LDFLAGS) $^ -o $@
+
+BUILD/src/%.o: src/%.c BUILD/src
+	$(CC) -c $(CFLAGS) $< -o $@
+
+BUILD/src:
+	mkdir -p BUILD/src

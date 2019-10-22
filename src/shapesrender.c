@@ -10,9 +10,8 @@ enum {
 };
 
 enum {
-        SHADER_ELLIPSE_VERT,
+        SHADER_PROJECTIONS_VERT,
         SHADER_ELLIPSE_FRAG,
-        SHADER_CIRCLE_VERT,
         SHADER_CIRCLE_FRAG,
         NUM_SHADER_KINDS,
 };
@@ -59,15 +58,20 @@ struct AttributeInfo {
 
 static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 #define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
-        MAKE(SHADER_ELLIPSE_VERT, SHADER_VERTEX,
+        MAKE(SHADER_PROJECTIONS_VERT, SHADER_VERTEX,
                 "#version 130\n"
-                "uniform mat2 transMat;\n"
+                "uniform mat3 transMat;\n"
+                "vec4 compute_screenpos(vec2 position)\n"
+                "{\n"
+                "    vec3 v = transMat * vec3(position, 1.0);\n"
+                "    return vec4(v.xy, 0.0, 1.0);\n"
+                "}\n"
                 "in vec2 position;\n"
-                "out vec2 fragPosF;\n"
+                "out vec2 positionF;\n"
                 "void main()\n"
                 "{\n"
-                "       fragPosF = position;\n"
-                "       gl_Position = vec4(transMat * position, 0.0, 1.0);\n"
+                "    positionF = position;\n"
+                "    gl_Position = compute_screenpos(position);\n"
                 "}\n"),
         MAKE(SHADER_ELLIPSE_FRAG, SHADER_FRAGMENT,
                 "#version 130\n"
@@ -75,32 +79,21 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "uniform vec2 p1;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
-                "in vec2 fragPosF;\n"
+                "in vec2 positionF;\n"
                 "void main()\n"
                 "{\n"
-                "    float d0 = distance(p0.xy, fragPosF);\n"
-                "    float d1 = distance(p1.xy, fragPosF);\n"
+                "    float d0 = distance(p0.xy, positionF);\n"
+                "    float d1 = distance(p1.xy, positionF);\n"
                 "    float d = d0 + d1;\n"
-                "    float fragDist = fwidth(d);\n"
-                "    float rdx = fragDist;\n"
+                "    float rdx = fwidth(d);\n"
                 "    if (d > radius + rdx)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
                 "    gl_FragColor = vec4(color, 1.0 - val);\n"
                 "}\n"),
-        MAKE(SHADER_CIRCLE_VERT, SHADER_VERTEX,
-                "#version 130\n"
-                "uniform mat2 transMat;\n"
-                "in vec2 position;\n"
-                "out vec2 positionF;\n"
-                "void main()\n"
-                "{\n"
-                "    positionF = position;\n"
-                "    gl_Position = vec4(transMat * position, 0.0, 1.0);\n"
-                "}\n"),
         MAKE(SHADER_CIRCLE_FRAG, SHADER_FRAGMENT,
                 "#version 130\n"
-                "uniform mat2 transMat;\n"
+                "uniform mat3 transMat;\n"
                 "uniform vec2 centerPoint;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
@@ -108,8 +101,7 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
-                "    float fragDist = fwidth(positionF.x - centerPoint.x);\n"
-                "    float rdx = fragDist;\n"
+                "    float rdx = fwidth(d);\n"
                 "    if (d > radius + rdx)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
@@ -119,9 +111,9 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 };
 
 static struct LinkInfo linkInfo[] = {
-        { PROGRAM_ELLIPSE, SHADER_ELLIPSE_VERT },
+        { PROGRAM_ELLIPSE, SHADER_PROJECTIONS_VERT },
+        { PROGRAM_CIRCLE, SHADER_PROJECTIONS_VERT },
         { PROGRAM_ELLIPSE, SHADER_ELLIPSE_FRAG },
-        { PROGRAM_CIRCLE, SHADER_CIRCLE_VERT },
         { PROGRAM_CIRCLE, SHADER_CIRCLE_FRAG },
 };
 
@@ -148,11 +140,11 @@ static const struct AttributeInfo attributeInfo[NUM_ATTRIBUTE_KINDS] = {
 
 // two triangles covering the whole screen
 static const struct Vec2 screenVerts[] = {
-        { -1.0f, -1.0f },
-        { -1.0f, 1.0f },
+        { 0.0f, 0.0f },
+        { 0.0f, 1.0f },
         { 1.0f, 1.0f },
-        { -1.0f, -1.0f },
-        { 1.0f, -1.0f },
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
         { 1.0f, 1.0f },
 };
 
@@ -207,7 +199,7 @@ static void draw_ellipse(Object ellipse)
                 color = (struct Vec3) { 0.0f, 0.0f, 1.0f };
 
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
-        set_program_uniform_mat2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
+        set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
         set_program_uniform_3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_color], color.x, color.y, color.z);
         set_program_uniform_1f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_radius], e->radius);
         set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p0], ellipseControlPoints[0].x, ellipseControlPoints[0].y);
@@ -237,7 +229,7 @@ static void draw_point(Object obj)
         else
                 color = (struct Vec3) { 0.8f, 0.8f, 0.8f };
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
-        set_program_uniform_mat2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
+        set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
         set_program_uniform_1f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_radius], radius);
         set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], color.x, color.y, color.z);
@@ -247,10 +239,15 @@ static void draw_point(Object obj)
 void draw_shapes(void)
 {
         clear_current_buffer();
-        transMat[0][0] = zoomFactor * 1.0f;
+        transMat[0][0] = zoomFactor * 2.0f;
         transMat[0][1] = 0.0f;
+        transMat[0][2] = -zoomFactor;
         transMat[1][0] = 0.0f;
-        transMat[1][1] = zoomFactor * -1.0f;
+        transMat[1][1] = zoomFactor * 2.0f;
+        transMat[1][2] = -zoomFactor;
+        transMat[2][0] = 0.0f;
+        transMat[2][1] = 0.0f;
+        transMat[2][2] = 1.0f;
         for (Object i = 0; i < numObjects; i++)
                 if (objects[i].objectKind == OBJECT_ELLIPSE)
                         draw_ellipse(i);

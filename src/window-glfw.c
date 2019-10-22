@@ -359,7 +359,7 @@ void swap_buffers(void)
         glfwSwapBuffers(windowGlfw);
 }
 
-ANY_FUNCTION *window_get_OpenGL_function_pointer(const char *name)
+ANY_FUNCTION *get_OpenGL_function_pointer(const char *name)
 {
         return glfwGetProcAddress(name);
 }

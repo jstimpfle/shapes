@@ -189,6 +189,6 @@ void enter_fullscreen_mode(void);
 void toggle_fullscreen(void);
 
 typedef void ANY_FUNCTION(void);
-ANY_FUNCTION *window_get_OpenGL_function_pointer(const char *name);
+ANY_FUNCTION *get_OpenGL_function_pointer(const char *name);
 
 #endif
