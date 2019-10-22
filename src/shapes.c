@@ -16,23 +16,16 @@ float distance2d(float x0, float y0, float x1, float y1)
 
 int test_circle_hit(const struct Circle *circle, float x, float y)
 {
-        float cx = zoomFactor * circle->centerX;
-        float cy = zoomFactor * circle->centerY;
-        float radius = zoomFactor * circle->radius;
-        return distance2d(cx, cy, x, y) < radius;
+        return distance2d(circle->centerX, circle->centerY, x, y) < circle->radius;
 }
 
 int test_ellipse_hit(const struct Ellipse *ellipse, float x, float y)
 {
         struct Circle *c0 = &objects[ellipse->centerCircle0].data.tCircle;
         struct Circle *c1 = &objects[ellipse->centerCircle1].data.tCircle;
-        float x0 = zoomFactor * c0->centerX;
-        float y0 = zoomFactor * c0->centerY;
-        float x1 = zoomFactor * c1->centerX;
-        float y1 = zoomFactor * c1->centerY;
-        float d0 = distance2d(x0, y0, x, y);
-        float d1 = distance2d(x1, y1, x, y);
-        return d0 + d1 < zoomFactor * ellipse->radius;
+        float d0 = distance2d(c0->centerX, c0->centerY, x, y);
+        float d1 = distance2d(c1->centerX, c1->centerY, x, y);
+        return d0 + d1 < ellipse->radius;
 }
 
 int test_object_hit(Object obj, float x, float y)
@@ -43,6 +36,7 @@ int test_object_hit(Object obj, float x, float y)
                 return test_ellipse_hit(&objects[obj].data.tEllipse, x, y);
         else
                 UNREACHABLE();
+        log_postf("ASDF\n");
 }
 
 Object add_circle(float x, float y, float radius)
@@ -72,12 +66,17 @@ void update_shapes(struct Input input)
         if (input.inputKind == INPUT_CURSORMOVE) {
                 int x = input.data.tCursormove.pixelX;
                 int y = input.data.tCursormove.pixelY;
-                // unproject mouse position. XXX do it based on transMat
-                mousePosX = (float) x / windowWidthInPixels;
-                mousePosY = (float) (windowHeightInPixels - y) / windowWidthInPixels;
+                // first, calculate OpenGL window space coordinates: (-1,1) x (-1,1)
+                mousePosX = (float)x / windowWidthInPixels;
+                mousePosY = (float) (windowHeightInPixels - y) / windowHeightInPixels;
+                mousePosX = (mousePosX * 2) - 1.0f;
+                mousePosY = (mousePosY * 2) - 1.0f;
+                // now, unproject mouse position to world space. (We don't do all multiplications here since we know that most values are 0).
+                mousePosX = unprojMat[0][0] * mousePosX + unprojMat[0][2];
+                mousePosY = unprojMat[1][1] * mousePosY + unprojMat[1][2];
                 if (isDraggingObject) {
-                        float mouseDiffX = (mousePosX - mouseStartX) / zoomFactor;
-                        float mouseDiffY = (mousePosY - mouseStartY) / zoomFactor;
+                        float mouseDiffX = (mousePosX - mouseStartX);
+                        float mouseDiffY = (mousePosY - mouseStartY);
                         struct Object *obj = &objects[activeObject];
                         if (obj->objectKind == OBJECT_ELLIPSE) {
                                 obj->data.tEllipse.radius = objectStartRadius + mousePosX - mouseStartX;

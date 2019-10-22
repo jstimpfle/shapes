@@ -18,12 +18,12 @@ enum {
 };
 
 enum {
-        UNIFORM_ELLIPSE_transMat,
+        UNIFORM_ELLIPSE_projMat,
         UNIFORM_ELLIPSE_p0,
         UNIFORM_ELLIPSE_p1,
         UNIFORM_ELLIPSE_radius,
         UNIFORM_ELLIPSE_color,
-        UNIFORM_CIRCLE_transMat,
+        UNIFORM_CIRCLE_projMat,
         UNIFORM_CIRCLE_centerPoint,
         UNIFORM_CIRCLE_radius,
         UNIFORM_CIRCLE_color,
@@ -61,10 +61,10 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 #define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
         MAKE(SHADER_PROJECTIONS_VERT, SHADER_VERTEX,
                 "#version 130\n"
-                "uniform mat3 transMat;\n"
+                "uniform mat3 projMat;\n"
                 "vec4 compute_screenpos(vec2 position)\n"
                 "{\n"
-                "    vec3 v = transMat * vec3(position, 1.0);\n"
+                "    vec3 v = projMat * vec3(position, 1.0);\n"
                 "    return vec4(v.xy, 0.0, 1.0);\n"
                 "}\n"
                 "in vec2 position;\n"
@@ -94,7 +94,7 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "}\n"),
         MAKE(SHADER_CIRCLE_FRAG, SHADER_FRAGMENT,
                 "#version 130\n"
-                "uniform mat3 transMat;\n"
+                "uniform mat3 projMat;\n"
                 "uniform vec2 centerPoint;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
@@ -120,12 +120,12 @@ static struct LinkInfo linkInfo[] = {
 
 static const struct UniformInfo uniformInfo[NUM_UNIFORM_KINDS] = {
 #define MAKE(x, y, z) [y] = { x, z }
-        MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_transMat, "transMat" ),
+        MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_projMat, "projMat" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_p0, "p0" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_p1, "p1" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_radius, "radius" ),
         MAKE( PROGRAM_ELLIPSE, UNIFORM_ELLIPSE_color, "color" ),
-        MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_transMat, "transMat" ),
+        MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_projMat, "projMat" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_centerPoint, "centerPoint" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_radius, "radius" ),
         MAKE( PROGRAM_CIRCLE, UNIFORM_CIRCLE_color, "color" ),
@@ -200,7 +200,7 @@ static void draw_ellipse(Object ellipse)
                 color = (struct Vec3) { 0.15f, 0.3f, 0.4f };
 
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
-        set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
+        set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_projMat], &projMat[0][0]);
         set_program_uniform_3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_color], color.x, color.y, color.z);
         set_program_uniform_1f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_radius], e->radius);
         set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p0], ellipseControlPoints[0].x, ellipseControlPoints[0].y);
@@ -230,7 +230,7 @@ static void draw_point(Object obj)
         else
                 color = (struct Vec3) { 0.5f, 0.1f, 0.1f };
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
-        set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
+        set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_projMat], &projMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
         set_program_uniform_1f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_radius], radius);
         set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], color.x, color.y, color.z);
@@ -241,15 +241,24 @@ void draw_shapes(void)
 {
         clear_current_buffer();
         float ratio = (float) windowWidthInPixels / windowHeightInPixels;
-        transMat[0][0] = zoomFactor * 2.0f;
-        transMat[0][1] = 0.0f;
-        transMat[0][2] = -zoomFactor;
-        transMat[1][0] = 0.0f;
-        transMat[1][1] = zoomFactor * ratio * 2.0f;
-        transMat[1][2] = -zoomFactor;
-        transMat[2][0] = 0.0f;
-        transMat[2][1] = 0.0f;
-        transMat[2][2] = 1.0f;
+        projMat[0][0] = zoomFactor * 2.0f;
+        projMat[0][1] = 0.0f;
+        projMat[0][2] = -zoomFactor;
+        projMat[1][0] = 0.0f;
+        projMat[1][1] = zoomFactor * ratio * 2.0f;
+        projMat[1][2] = -zoomFactor;
+        projMat[2][0] = 0.0f;
+        projMat[2][1] = 0.0f;
+        projMat[2][2] = 1.0f;
+        unprojMat[0][0] = 1.0f / (zoomFactor * 2.0f);
+        unprojMat[0][1] = 0.0f;
+        unprojMat[0][2] = 1.0f / 2.0f;
+        unprojMat[1][0] = 0.0f;
+        unprojMat[1][1] = 1.0f / (zoomFactor * ratio * 2.0f);
+        unprojMat[1][2] = 1.0f / (ratio * 2.0f);
+        unprojMat[2][0] = 0.0f;
+        unprojMat[2][1] = 0.0f;
+        unprojMat[2][2] = 1.0f;
         for (Object i = 0; i < numObjects; i++)
                 if (objects[i].objectKind == OBJECT_ELLIPSE)
                         draw_ellipse(i);
