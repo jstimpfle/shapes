@@ -192,11 +192,11 @@ static void draw_ellipse(Object ellipse)
 
         struct Vec3 color;
         if (isDraggingObject && activeObject == ellipse)
-                color = (struct Vec3) {0.4f, 0.4f, 0.5f};
+                color = (struct Vec3) {0.3f, 0.4f, 0.5f};
         else if (isHoveringObject && activeObject == ellipse)
-                color = (struct Vec3) { 0.5, 0.0f, 0.0f };
+                color = (struct Vec3) { 0.2, 0.4f, 0.5f };
         else
-                color = (struct Vec3) { 0.0f, 0.0f, 1.0f };
+                color = (struct Vec3) { 0.15f, 0.3f, 0.4f };
 
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_transMat], &transMat[0][0]);
@@ -223,11 +223,11 @@ static void draw_point(Object obj)
                 { xa, ya }, { xb, yb }, { xb, ya }
         };
         if (isDraggingObject && activeObject == obj)
-                color = (struct Vec3) { 0.4f, 0.2f, 0.8f };
+                color = (struct Vec3) { 0.8f, 0.3f, 0.1f };
         else if (isHoveringObject && activeObject == obj)
-                color = (struct Vec3) { 0.1f, 0.1f, 0.4f };
+                color = (struct Vec3) { 0.6f, 0.2f, 0.1f };
         else
-                color = (struct Vec3) { 0.8f, 0.8f, 0.8f };
+                color = (struct Vec3) { 0.5f, 0.1f, 0.1f };
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_transMat], &transMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
