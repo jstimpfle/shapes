@@ -17,7 +17,7 @@ static __declspec(noreturn) void UNREACHABLE(void) {}
 #else  // assume gcc or clang
 #define NORETURN __attribute__((noreturn))
 #define UNUSEDFUNC __attribute__((unused))
-#define UNREACHABLE __builtin_unreachable()
+#define UNREACHABLE() __builtin_unreachable()
 #endif
 
 #define LENGTH(a) (sizeof (a) / sizeof (a)[0])
