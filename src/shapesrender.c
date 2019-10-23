@@ -108,7 +108,7 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    vec3 centerToSurface = vec3(positionF - centerPoint, h);\n"
                 "    vec3 lightPos = vec3(0.5,0.5,6*radius);\n"
                 "    vec3 surfaceToLight = lightPos-vec3(positionF, h);\n"
-                "    float dotProduct = dot(normalize(lightToSurface), normalize(centerToSurface));\n"
+                "    float dotProduct = dot(normalize(surfaceToLight), normalize(centerToSurface));\n"
                 "    float shade = 0.8 * clamp(dotProduct, 0, 1) + 0.2;\n"
                 "    float rdx = fwidth(d);\n"
                 "    if (d > radius)\n"
