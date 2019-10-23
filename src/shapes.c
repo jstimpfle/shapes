@@ -36,7 +36,6 @@ int test_object_hit(Object obj, float x, float y)
                 return test_ellipse_hit(&objects[obj].data.tEllipse, x, y);
         else
                 UNREACHABLE();
-        log_postf("ASDF\n");
 }
 
 Object add_circle(float x, float y, float radius)

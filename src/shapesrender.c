@@ -57,7 +57,7 @@ struct AttributeInfo {
         const char *attributeName;
 };
 
-static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
+static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 #define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
         MAKE(SHADER_PROJECTIONS_VERT, SHADER_VERTEX,
                 "#version 130\n"
@@ -87,7 +87,7 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    float d1 = distance(p1.xy, positionF);\n"
                 "    float d = d0 + d1;\n"
                 "    float rdx = fwidth(d);\n"
-                "    if (d > radius + rdx)\n"
+                "    if (d > radius)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
                 "    gl_FragColor = vec4(color, 1.0 - val);\n"
@@ -102,16 +102,24 @@ static struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
+                /* Find height h which is the y-component such that vec3(positionF, h) is on the surface of the circle ("ball"). */
+                /* That means that h must be such that h^2 + d^2 = radius^2 */
+                "    float h = sqrt(radius * radius - d * d);\n"
+                "    vec3 centerToSurface = vec3(positionF - centerPoint, h);\n"
+                "    vec3 lightPos = vec3(0.5,0.5,6*radius);\n"
+                "    vec3 surfaceToLight = lightPos-vec3(positionF, h);\n"
+                "    float dotProduct = dot(normalize(lightToSurface), normalize(centerToSurface));\n"
+                "    float shade = 0.8 * clamp(dotProduct, 0, 1) + 0.2;\n"
                 "    float rdx = fwidth(d);\n"
-                "    if (d > radius + rdx)\n"
+                "    if (d > radius)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
-                "    gl_FragColor = vec4(color, 1.0 - val);\n"
+                "    gl_FragColor = vec4(shade, 0.1*color.xy, 1.0 - val);\n"
                 "}\n"),
 #undef MAKE
 };
 
-static struct LinkInfo linkInfo[] = {
+static const struct LinkInfo linkInfo[] = {
         { PROGRAM_ELLIPSE, SHADER_PROJECTIONS_VERT },
         { PROGRAM_CIRCLE, SHADER_PROJECTIONS_VERT },
         { PROGRAM_ELLIPSE, SHADER_ELLIPSE_FRAG },
