@@ -57,6 +57,25 @@ struct AttributeInfo {
         const char *attributeName;
 };
 
+enum {
+        STATE_NORMAL,
+        STATE_HOVERING,
+        STATE_DRAGGING,
+        NUM_STATES,
+};
+
+static const float ellipse_colors[NUM_STATES][3] = {
+        { 0.8f, 0.3f, 0.1f },
+        { 0.6f, 0.2f, 0.1f },
+        { 0.5f, 0.1f, 0.1f },
+};
+
+static const float circle_colors[NUM_STATES][3] = {
+        { 0.8f, 0.3f, 0.1f },
+        { 0.6f, 0.2f, 0.1f },
+        { 0.5f, 0.1f, 0.1f },
+};
+
 static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
 #define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
         MAKE(SHADER_PROJECTIONS_VERT, SHADER_VERTEX,
@@ -164,6 +183,16 @@ static AttributeLocation attributeLocation[NUM_ATTRIBUTE_KINDS];
 static GfxVAO gfxVaoOfProgram[NUM_PROGRAM_KINDS];
 static GfxVBO gfxVBO;
 
+static int get_object_state(Object obj)
+{
+        if (isDraggingObject && activeObject == obj)
+                return STATE_DRAGGING;
+        else if (isHoveringObject && activeObject == obj)
+                return STATE_HOVERING;
+        else
+                return STATE_NORMAL;
+}
+
 void setup_shapesrender(void)
 {
         for (int i = 0; i < NUM_SHADER_KINDS; i++)
@@ -198,21 +227,14 @@ static void draw_ellipse(Object ellipse)
                 { c0->centerX, c0->centerY },
                 { c1->centerX, c1->centerY },
         };
-
-        struct Vec3 color;
-        if (isDraggingObject && activeObject == ellipse)
-                color = (struct Vec3) {0.3f, 0.4f, 0.5f};
-        else if (isHoveringObject && activeObject == ellipse)
-                color = (struct Vec3) { 0.2f, 0.4f, 0.5f };
-        else
-                color = (struct Vec3) { 0.15f, 0.3f, 0.4f };
-
+        int stateKind = get_object_state(ellipse);
+        const float *color = ellipse_colors[stateKind];
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_projMat], &projMat[0][0]);
-        set_program_uniform_3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_color], color.x, color.y, color.z);
-        set_program_uniform_1f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_radius], e->radius);
         set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p0], ellipseControlPoints[0].x, ellipseControlPoints[0].y);
         set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p1], ellipseControlPoints[1].x, ellipseControlPoints[1].y);
+        set_program_uniform_1f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_radius], e->radius);
+        set_program_uniform_3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_color], color[0], color[1], color[2]);
         render_with_GfxProgram(gfxProgram[PROGRAM_ELLIPSE], gfxVaoOfProgram[PROGRAM_ELLIPSE], 0, LENGTH(screenVerts));
 }
 
@@ -222,7 +244,6 @@ static void draw_point(Object obj)
         float x = circle->centerX;
         float y = circle->centerY;
         float radius = circle->radius;
-        struct Vec3 color;
         float xa = x - 2.f * radius;
         float xb = x + 2.f * radius;
         float ya = y - 2.f * radius;
@@ -230,18 +251,14 @@ static void draw_point(Object obj)
         const struct Vec2 smallVerts[] = {
                 { xa, ya }, { xa, yb }, { xb, yb },
                 { xa, ya }, { xb, yb }, { xb, ya }
-        };
-        if (isDraggingObject && activeObject == obj)
-                color = (struct Vec3) { 0.8f, 0.3f, 0.1f };
-        else if (isHoveringObject && activeObject == obj)
-                color = (struct Vec3) { 0.6f, 0.2f, 0.1f };
-        else
-                color = (struct Vec3) { 0.5f, 0.1f, 0.1f };
+        };        
+        int stateKind = get_object_state(obj);
+        const float *color = circle_colors[stateKind];
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_projMat], &projMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
         set_program_uniform_1f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_radius], radius);
-        set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], color.x, color.y, color.z);
+        set_program_uniform_3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_color], color[0], color[1], color[2]);
         render_with_GfxProgram(gfxProgram[PROGRAM_CIRCLE], gfxVaoOfProgram[PROGRAM_CIRCLE], 0, LENGTH(screenVerts));
 }
 
