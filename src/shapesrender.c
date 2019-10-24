@@ -64,16 +64,16 @@ enum {
         NUM_STATES,
 };
 
-static const float ellipse_colors[NUM_STATES][3] = {
-        { 0.8f, 0.3f, 0.1f },
-        { 0.6f, 0.2f, 0.1f },
-        { 0.5f, 0.1f, 0.1f },
+static const float ellipseColors[NUM_STATES][3] = {
+        { 0.15f, 0.3f, 0.4f },
+        { 0.2f, 0.4f, 0.5f },
+        { 0.3f, 0.4f, 0.5f },
 };
 
-static const float circle_colors[NUM_STATES][3] = {
-        { 0.8f, 0.3f, 0.1f },
-        { 0.6f, 0.2f, 0.1f },
-        { 0.5f, 0.1f, 0.1f },
+static const float circleColors[NUM_STATES][3] = {
+        { 0.8f, 0.2f, 0.1f },
+        { 0.85f, 0.2f, 0.2f },
+        { 0.9f, 0.3f, 0.2f },
 };
 
 static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
@@ -133,7 +133,7 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    if (d > radius)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
-                "    gl_FragColor = vec4(shade, 0.1*color.xy, 1.0 - val);\n"
+                "    gl_FragColor = vec4(shade * color, 1.0 - val);\n"
                 "}\n"),
 #undef MAKE
 };
@@ -228,7 +228,7 @@ static void draw_ellipse(Object ellipse)
                 { c1->centerX, c1->centerY },
         };
         int stateKind = get_object_state(ellipse);
-        const float *color = ellipse_colors[stateKind];
+        const float *color = ellipseColors[stateKind];
         set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_projMat], &projMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_ELLIPSE], uniformLocation[UNIFORM_ELLIPSE_p0], ellipseControlPoints[0].x, ellipseControlPoints[0].y);
@@ -253,7 +253,7 @@ static void draw_point(Object obj)
                 { xa, ya }, { xb, yb }, { xb, ya }
         };        
         int stateKind = get_object_state(obj);
-        const float *color = circle_colors[stateKind];
+        const float *color = circleColors[stateKind];
         set_GfxVBO_data(gfxVBO, &smallVerts, sizeof smallVerts);
         set_program_uniform_mat3f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_projMat], &projMat[0][0]);
         set_program_uniform_2f(gfxProgram[PROGRAM_CIRCLE], uniformLocation[UNIFORM_CIRCLE_centerPoint], x, y);
