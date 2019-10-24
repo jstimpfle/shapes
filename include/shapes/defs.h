@@ -20,7 +20,7 @@ static __declspec(noreturn) void UNREACHABLE(void) {}
 #define UNREACHABLE() __builtin_unreachable()
 #endif
 
-#define LENGTH(a) (sizeof (a) / sizeof (a)[0])
+#define LENGTH(a) ((int) (sizeof (a) / sizeof (a)[0]))
 #define ENSURE(a) assert(a)
 #define UNUSED(arg) (void)(arg)
 
