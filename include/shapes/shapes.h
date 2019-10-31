@@ -1,3 +1,6 @@
+#ifndef SHAPES_SHAPES_H_INCLUDED
+#define SHAPES_SHAPES_H_INCLUDED
+
 #include <shapes/defs.h>
 #include <shapes/geometry.h>
 #include <shapes/window.h> // struct Input
@@ -53,3 +56,5 @@ void setup_shapes(void);
 Object add_circle(float x, float y, float radius);
 Object add_ellipse(Object centerCircle0, Object centerCircle1, float radius);
 void update_shapes(struct Input input);
+
+#endif

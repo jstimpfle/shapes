@@ -1,5 +1,5 @@
-#ifndef SHAPES_SHAPES_H_INCLUDED
-#define SHAPES_SHAPES_H_INCLUDED
+#ifndef SHAPES_DEFS_H_INCLUDED
+#define SHAPES_DEFS_H_INCLUDED
 
 #include <assert.h>
 #include <stdarg.h>

@@ -1,4 +1,4 @@
-CFLAGS := -c -std=c99 -Wall
+CFLAGS := -std=c99 -Wall
 CFLAGS += -Iinclude
 CFLAGS += $(shell pkg-config --cflags gl)
 CFLAGS += $(shell pkg-config --cflags glu)
