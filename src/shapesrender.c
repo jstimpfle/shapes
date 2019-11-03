@@ -121,19 +121,31 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
+                "    if (d > radius)\n"
+                "        discard;\n"
                 /* Find height h which is the y-component such that vec3(positionF, h) is on the surface of the circle ("ball"). */
                 /* That means that h must be such that h^2 + d^2 = radius^2 */
                 "    float h = sqrt(radius * radius - d * d);\n"
-                "    vec3 centerToSurface = vec3(positionF - centerPoint, h);\n"
-                "    vec3 lightPos = vec3(0.5,0.5,6*radius);\n"
-                "    vec3 surfaceToLight = lightPos-vec3(positionF, h);\n"
+                "    vec3 surfacePoint = vec3(positionF, h);\n"
+                "    vec3 centerToSurface = surfacePoint - vec3(centerPoint, 0.0);\n"
+                "    vec3 lightPos = vec3(0.2, 0.5, 5.0*radius);\n"
+                "    vec3 surfaceToLight = lightPos - vec3(positionF, h);\n"
+                "    vec3 specPosition = vec3(0.5, 0.5, 6.0);\n"  // center of screen
+
                 "    float dotProduct = dot(normalize(surfaceToLight), normalize(centerToSurface));\n"
-                "    float shade = 0.8 * clamp(dotProduct, 0, 1) + 0.2;\n"
+                "    float diffuseStrength = clamp(dotProduct, 0.0, 1.0) + 0.2;\n"
+
+                "    vec3 surfaceNormal = normalize(centerToSurface);\n"
+                "    vec3 reflectVector = normalize(-surfaceToLight - 2.0 * dot(-surfaceToLight, surfaceNormal) * surfaceNormal);\n"
+                "    vec3 specDirection = normalize(specPosition - surfacePoint);\n"
+                "    float specularStrength = pow(clamp(dot(reflectVector, specDirection), 0, 1), 4.0);\n"
+
+                /* smooth shape at the edges */
                 "    float rdx = fwidth(d);\n"
-                "    if (d > radius)\n"
-                "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
-                "    gl_FragColor = vec4(shade * color, 1.0 - val);\n"
+
+                "    float strength = 0.1 + 0.3 * diffuseStrength + 0.5 * specularStrength;\n"
+                "    gl_FragColor = vec4(strength * color, 1.0 - val);\n"
                 "}\n"),
 #undef MAKE
 };
