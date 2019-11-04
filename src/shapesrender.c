@@ -118,6 +118,13 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
                 "in vec2 positionF;\n"
+                "float compute_specular_strength(vec3 lightPos, vec3 surfacePoint, vec3 normalizedSurfaceNormal, vec3 spectatorPosition) {\n"
+                "    vec3 lightToSurface = surfacePoint - lightPos;\n"
+                "    vec3 reflectVector = normalize(lightToSurface - 2.0 * dot(lightToSurface, normalizedSurfaceNormal) * normalizedSurfaceNormal);\n"
+                "    vec3 spectateDirection = normalize(spectatorPosition - surfacePoint);\n"
+                "    float strength = pow(clamp(dot(reflectVector, spectateDirection), 0, 1), 4.0);\n"
+                "    return strength;\n"
+                "}\n"
                 "void main()\n"
                 "{\n"
                 "    float d = distance(positionF, centerPoint);\n"
@@ -129,23 +136,27 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    vec3 surfacePoint = vec3(positionF, h);\n"
                 "    vec3 centerToSurface = surfacePoint - vec3(centerPoint, 0.0);\n"
                 "    vec3 lightPos = vec3(0.2, 0.5, 5.0*radius);\n"
+                "    vec3 lightPos2 = vec3(1.0, 1.0, 1.0);\n"
                 "    vec3 surfaceToLight = lightPos - vec3(positionF, h);\n"
-                "    vec3 specPosition = vec3(0.5, 0.5, 6.0);\n"  // center of screen
+                "    vec3 spectatorPosition = vec3(0.5, 0.5, 6.0);\n"  // center of screen
 
                 "    float dotProduct = dot(normalize(surfaceToLight), normalize(centerToSurface));\n"
                 "    float diffuseStrength = clamp(dotProduct, 0.0, 1.0) + 0.2;\n"
 
                 "    vec3 surfaceNormal = normalize(centerToSurface);\n"
-                "    vec3 reflectVector = normalize(-surfaceToLight - 2.0 * dot(-surfaceToLight, surfaceNormal) * surfaceNormal);\n"
-                "    vec3 specDirection = normalize(specPosition - surfacePoint);\n"
-                "    float specularStrength = pow(clamp(dot(reflectVector, specDirection), 0, 1), 4.0);\n"
+                "    float specularStrength = compute_specular_strength(lightPos, surfacePoint, surfaceNormal, spectatorPosition);\n"
+                "    float specularStrength2 = compute_specular_strength(lightPos2, surfacePoint, surfaceNormal, spectatorPosition);\n"
 
                 /* smooth shape at the edges */
                 "    float rdx = fwidth(d);\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
 
-                "    float strength = 0.1 + 0.3 * diffuseStrength + 0.5 * specularStrength;\n"
-                "    gl_FragColor = vec4(strength * color, 1.0 - val);\n"
+                " vec3 specularLight = vec3(0.0, 1.0, 1.0);\n"
+                " vec3 specularLight2 = vec3(0.3, 0.0, 0.6);\n"
+                " vec3 specularColor = 0.5 * specularStrength * specularLight;\n"
+                " vec3 specularColor2 = 0.5 * specularStrength2 * specularLight2;\n"
+                "    float strength = 0.1 + 0.3 * diffuseStrength;\n"
+                "    gl_FragColor = vec4(strength * color + (specularColor + specularColor2), 1.0 - val);\n"
                 "}\n"),
 #undef MAKE
 };
