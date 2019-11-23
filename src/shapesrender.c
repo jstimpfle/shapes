@@ -7,6 +7,7 @@
 enum {
         PROGRAM_ELLIPSE,
         PROGRAM_CIRCLE,
+        PROGRAM_TEST,
         NUM_PROGRAM_KINDS,
 };
 
@@ -14,6 +15,8 @@ enum {
         SHADER_PROJECTIONS_VERT,
         SHADER_ELLIPSE_FRAG,
         SHADER_CIRCLE_FRAG,
+        SHADER_TEST_VERT,
+        SHADER_TEST_FRAG,
         NUM_SHADER_KINDS,
 };
 
@@ -33,6 +36,7 @@ enum {
 enum {
         ATTRIBUTE_ELLIPSE_position,
         ATTRIBUTE_CIRCLE_position,
+        ATTRIBUTE_TEST_position,
         NUM_ATTRIBUTE_KINDS,
 };
 
@@ -158,6 +162,56 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    float strength = 0.1 + 0.3 * diffuseStrength;\n"
                 "    gl_FragColor = vec4(strength * color + (specularColor + specularColor2), 1.0 - val);\n"
                 "}\n"),
+        MAKE(SHADER_TEST_VERT, SHADER_VERTEX,
+                "#version 130\n"
+                "in vec2 position;\n"
+                "out vec2 p;\n"
+                "void main()\n"
+                "{\n"
+                "    p = position;\n"
+                "    gl_Position = vec4(position, 0.0, 1.0);\n"
+                "}\n"),
+        MAKE(SHADER_TEST_FRAG, SHADER_FRAGMENT,
+                "#version 130\n"
+                "in vec2 p;\n"
+                "float square(float x) { return x * x; }\n"
+                "void main()\n"
+                "{\n"
+                "    vec4 bgColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+                "    vec4 fgColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+                "    float thickness = 0.05;\n"
+                "    float r = 0.2;\n"
+                "    float cx = 0.0;\n"
+                "    float cy = 0.0;\n"
+                "    float w = 0.5;\n"
+                "    float h = 0.3;\n"
+                "    float dx = abs(cx - p.x);\n"
+                "    float dy = abs(cy - p.y);\n"
+                "    float rdx = fwidth(p.x);\n"
+                "    if ((w - r <= dx && dx < w)\n"
+                "        && (h - r <= dy && dy < h)) {\n"
+                "        float d = distance(vec2(dx, dy), vec2(w - r, h - r));\n"
+                "        if (d > r - thickness / 2) {\n"
+                "            float val = (d - (r - rdx)) / rdx;\n"
+                "            gl_FragColor = vec4(fgColor.rgb, 1.0 - val);\n"
+                "        }\n"
+                "        else {\n"
+                "            float val = (d - (r - thickness)) / rdx;\n"
+                "            gl_FragColor = vec4(fgColor.rgb, val);\n"
+                "        }\n"
+                "    }\n"
+                "    else {\n"
+                "        float d = max(dx - (w - thickness), dy - (h - thickness));\n"
+                "        if (d > thickness / 2) {\n"
+                "            float val = (d - (thickness - rdx)) / rdx;\n"
+                "            gl_FragColor = vec4(fgColor.rgb, 1.0 - val);\n"
+                "        }\n"
+                "        else {\n"
+                "            float val = d / rdx;\n"
+                "            gl_FragColor = vec4(fgColor.rgb, val);\n"
+                "        }\n"
+                "    }\n"
+                "}\n"),
 #undef MAKE
 };
 
@@ -166,6 +220,8 @@ static const struct LinkInfo linkInfo[] = {
         { PROGRAM_CIRCLE, SHADER_PROJECTIONS_VERT },
         { PROGRAM_ELLIPSE, SHADER_ELLIPSE_FRAG },
         { PROGRAM_CIRCLE, SHADER_CIRCLE_FRAG },
+        { PROGRAM_TEST, SHADER_TEST_FRAG },
+        { PROGRAM_TEST, SHADER_TEST_VERT },
 };
 
 static const struct UniformInfo uniformInfo[NUM_UNIFORM_KINDS] = {
@@ -186,6 +242,7 @@ static const struct AttributeInfo attributeInfo[NUM_ATTRIBUTE_KINDS] = {
 #define MAKE(x, y, z) [y] = { x, z }
         MAKE( PROGRAM_ELLIPSE, ATTRIBUTE_ELLIPSE_position, "position" ),
         MAKE( PROGRAM_CIRCLE, ATTRIBUTE_CIRCLE_position, "position" ),
+        MAKE( PROGRAM_TEST, ATTRIBUTE_TEST_position, "position" ),
 #undef MAKE
 };
 
@@ -239,6 +296,7 @@ void setup_shapesrender(void)
         gfxVBO = create_GfxVBO();
         set_attribute_pointer(gfxVaoOfProgram[PROGRAM_ELLIPSE], attributeLocation[ATTRIBUTE_ELLIPSE_position], gfxVBO, 2, sizeof(struct Vec2), 0);
         set_attribute_pointer(gfxVaoOfProgram[PROGRAM_CIRCLE], attributeLocation[ATTRIBUTE_CIRCLE_position], gfxVBO, 2, sizeof(struct Vec2), 0);
+        set_attribute_pointer(gfxVaoOfProgram[PROGRAM_TEST], attributeLocation[ATTRIBUTE_TEST_position], gfxVBO, 2, sizeof(struct Vec2), 0);
 }
 
 static void draw_ellipse(Object ellipse)
@@ -307,6 +365,22 @@ void draw_shapes(void)
         unprojMat[2][0] = 0.0f;
         unprojMat[2][1] = 0.0f;
         unprojMat[2][2] = 1.0f;
+
+        {
+        // two triangles covering the whole screen
+        static const struct Vec2 screenVerts[] = {
+                { -1.0f, -1.0f },
+                { -1.0f, 1.0f },
+                { 1.0f, 1.0f },
+                { -1.0f, -1.0f },
+                { 1.0f, -1.0f },
+                { 1.0f, 1.0f },
+        };
+        clear_current_buffer();
+        set_GfxVBO_data(gfxVBO, &screenVerts, sizeof screenVerts);
+        render_with_GfxProgram(gfxProgram[PROGRAM_TEST], gfxVaoOfProgram[PROGRAM_TEST], 0, LENGTH(screenVerts));
+        }
+
         for (Object i = 0; i < numObjects; i++)
                 if (objects[i].objectKind == OBJECT_ELLIPSE)
                         draw_ellipse(i);
