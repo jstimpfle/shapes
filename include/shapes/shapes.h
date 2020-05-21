@@ -4,6 +4,10 @@
 #include <shapes/defs.h>
 #include <shapes/geometry.h>
 #include <shapes/window.h> // struct Input
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
 
 enum {
         OBJECT_CIRCLE,

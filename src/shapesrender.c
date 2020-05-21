@@ -81,9 +81,12 @@ static const float circleColors[NUM_STATES][3] = {
 };
 
 static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
-#define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, shaderSource }
+#ifdef __EMSCRIPTEN__
+#define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, "#version 300 es\n" "precision highp float;\n" shaderSource }
+#else
+#define MAKE(shaderKind, shaderType, shaderSource) [shaderKind] = { shaderType, #shaderKind, "#version 130\n" shaderSource }
+#endif
         MAKE(SHADER_PROJECTIONS_VERT, SHADER_VERTEX,
-                "#version 130\n"
                 "uniform mat3 projMat;\n"
                 "vec4 compute_screenpos(vec2 position)\n"
                 "{\n"
@@ -98,12 +101,12 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    gl_Position = compute_screenpos(position);\n"
                 "}\n"),
         MAKE(SHADER_ELLIPSE_FRAG, SHADER_FRAGMENT,
-                "#version 130\n"
                 "uniform vec2 p0;\n"
                 "uniform vec2 p1;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
                 "in vec2 positionF;\n"
+                "out vec4 out_color;\n"
                 "void main()\n"
                 "{\n"
                 "    float d0 = distance(p0.xy, positionF);\n"
@@ -113,20 +116,20 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    if (d > radius)\n"
                 "        discard;\n"
                 "    float val = (d - (radius - rdx)) / rdx;\n"
-                "    gl_FragColor = vec4(color, 1.0 - val);\n"
+                "    out_color = vec4(color, 1.0 - val);\n"
                 "}\n"),
         MAKE(SHADER_CIRCLE_FRAG, SHADER_FRAGMENT,
-                "#version 130\n"
                 "uniform mat3 projMat;\n"
                 "uniform vec2 centerPoint;\n"
                 "uniform float radius;\n"
                 "uniform vec3 color;\n"
                 "in vec2 positionF;\n"
+                "out vec4 out_color;\n"
                 "float compute_specular_strength(vec3 lightPos, vec3 surfacePoint, vec3 normalizedSurfaceNormal, vec3 spectatorPosition) {\n"
                 "    vec3 lightToSurface = surfacePoint - lightPos;\n"
                 "    vec3 reflectVector = normalize(lightToSurface - 2.0 * dot(lightToSurface, normalizedSurfaceNormal) * normalizedSurfaceNormal);\n"
                 "    vec3 spectateDirection = normalize(spectatorPosition - surfacePoint);\n"
-                "    float strength = pow(clamp(dot(reflectVector, spectateDirection), 0, 1), 4.0);\n"
+                "    float strength = pow(clamp(dot(reflectVector, spectateDirection), 0.0, 1.0), 4.0);\n"
                 "    return strength;\n"
                 "}\n"
                 "void main()\n"
@@ -160,10 +163,9 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 " vec3 specularColor = 0.5 * specularStrength * specularLight;\n"
                 " vec3 specularColor2 = 0.5 * specularStrength2 * specularLight2;\n"
                 "    float strength = 0.1 + 0.3 * diffuseStrength;\n"
-                "    gl_FragColor = vec4(strength * color + (specularColor + specularColor2), 1.0 - val);\n"
+                "    out_color = vec4(strength * color + (specularColor + specularColor2), 1.0 - val);\n"
                 "}\n"),
         MAKE(SHADER_TEST_VERT, SHADER_VERTEX,
-                "#version 130\n"
                 "in vec2 position;\n"
                 "out vec2 p;\n"
                 "void main()\n"
@@ -172,8 +174,8 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    gl_Position = vec4(position, 0.0, 1.0);\n"
                 "}\n"),
         MAKE(SHADER_TEST_FRAG, SHADER_FRAGMENT,
-                "#version 130\n"
                 "in vec2 p;\n"
+                "out vec4 out_color;\n"
                 "float square(float x) { return x * x; }\n"
                 "void main()\n"
                 "{\n"
@@ -191,24 +193,24 @@ static const struct ShaderInfo shaderInfo[NUM_SHADER_KINDS] = {
                 "    if ((w - r <= dx && dx < w)\n"
                 "        && (h - r <= dy && dy < h)) {\n"
                 "        float d = distance(vec2(dx, dy), vec2(w - r, h - r));\n"
-                "        if (d > r - thickness / 2) {\n"
+                "        if (d > r - thickness / 2.0) {\n"
                 "            float val = (d - (r - rdx)) / rdx;\n"
-                "            gl_FragColor = vec4(fgColor.rgb, 1.0 - val);\n"
+                "            out_color = vec4(fgColor.rgb, 1.0 - val);\n"
                 "        }\n"
                 "        else {\n"
                 "            float val = (d - (r - thickness)) / rdx;\n"
-                "            gl_FragColor = vec4(fgColor.rgb, val);\n"
+                "            out_color = vec4(fgColor.rgb, val);\n"
                 "        }\n"
                 "    }\n"
                 "    else {\n"
                 "        float d = max(dx - (w - thickness), dy - (h - thickness));\n"
-                "        if (d > thickness / 2) {\n"
+                "        if (d > thickness / 2.0) {\n"
                 "            float val = (d - (thickness - rdx)) / rdx;\n"
-                "            gl_FragColor = vec4(fgColor.rgb, 1.0 - val);\n"
+                "            out_color = vec4(fgColor.rgb, 1.0 - val);\n"
                 "        }\n"
                 "        else {\n"
                 "            float val = d / rdx;\n"
-                "            gl_FragColor = vec4(fgColor.rgb, val);\n"
+                "            out_color = vec4(fgColor.rgb, val);\n"
                 "        }\n"
                 "    }\n"
                 "}\n"),
